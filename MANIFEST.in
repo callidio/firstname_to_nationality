@@ -1,0 +1,3 @@
+include firstname_to_nationality/best-model.pt
+include firstname_to_nationality/firstname_nationalities.pkl
+include firstname_to_nationality/country_nationality.csv

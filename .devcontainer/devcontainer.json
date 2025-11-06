@@ -1,0 +1,44 @@
+{
+    "name": "Firstname to Nationality Python 3.13",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "args": {
+            "USER_UID": "${localEnv:USER_UID:1000}",
+            "USER_GID": "${localEnv:USER_GID:1000}"
+        }
+    },
+    "runArgs": [
+        "--env-file", ".devcontainer/.env",
+        "--userns=keep-id"
+    ],
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.pylint",
+                "ms-python.black-formatter",
+                "ms-python.isort",
+                "ms-toolsai.jupyter"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.formatting.provider": "black",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "editor.formatOnSave": true,
+                "python.sortImports.args": [
+                    "--profile=black"
+                ]
+            }
+        }
+    },
+    "forwardPorts": [8000, 8080],
+    "postCreateCommand": "pip install -e .",
+    "remoteUser": "bfrusteri",
+    "containerUser": "bfrusteri",
+    "updateRemoteUserUID": false
+}
