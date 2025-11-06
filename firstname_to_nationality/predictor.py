@@ -3,7 +3,7 @@ Core functionality for predicting nationality from first names.
 """
 
 import requests
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 
 class NationalityPredictor:
@@ -22,7 +22,7 @@ class NationalityPredictor:
         """
         self.api_key = api_key
     
-    def predict(self, first_name: str) -> List[Dict[str, any]]:
+    def predict(self, first_name: str) -> List[Dict[str, Any]]:
         """
         Predict the nationality of a person based on their first name.
         
@@ -59,7 +59,7 @@ class NationalityPredictor:
         except Exception as e:
             raise Exception(f"Error fetching nationality data: {str(e)}")
     
-    def get_most_probable_nationality(self, first_name: str) -> Optional[Dict[str, any]]:
+    def get_most_probable_nationality(self, first_name: str) -> Optional[Dict[str, Any]]:
         """
         Get the most probable nationality for a given first name.
         
@@ -79,7 +79,7 @@ class NationalityPredictor:
         return results[0] if results else None
 
 
-def predict_nationality(first_name: str, api_key: Optional[str] = None) -> List[Dict[str, any]]:
+def predict_nationality(first_name: str, api_key: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Convenience function to predict nationality from a first name.
     
