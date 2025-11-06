@@ -15,7 +15,25 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Basic Usage
+### Command Line Interface
+
+After installation, you can use the command-line tool:
+
+```bash
+# Analyze a single name
+firstname-to-nationality Michael
+
+# Show only top 3 predictions
+firstname-to-nationality --top 3 Maria
+
+# Use with API key
+firstname-to-nationality --api-key YOUR_KEY John
+
+# Get help
+firstname-to-nationality --help
+```
+
+### Python API - Basic Usage
 
 ```python
 from firstname_to_nationality import predict_nationality

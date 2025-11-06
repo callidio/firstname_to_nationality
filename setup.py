@@ -21,4 +21,9 @@ setup(
     install_requires=[
         "requests>=2.25.0",
     ],
+    entry_points={
+        'console_scripts': [
+            'firstname-to-nationality=firstname_to_nationality.cli:main',
+        ],
+    },
 )
