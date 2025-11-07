@@ -47,7 +47,7 @@ setuptools.setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/callidio/firstname_to_nationality",
     packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
     package_data={
         "firstname_to_nationality": [
@@ -56,7 +56,7 @@ setuptools.setup(
             "country_nationality.csv",
         ]
     },
-    python_requires=">=3.13",
+    python_requires=">=3.11",
     include_package_data=True,
     options={
         "build": {"build_base": "build"},
@@ -76,8 +76,8 @@ setuptools.setup(
     ],
     keywords="firstname nationality prediction names machine-learning nlp",
     project_urls={
-        "Documentation": "",
-        "Source": "",
-        "Tracker": "",
+        "Documentation": "https://github.com/callidio/firstname_to_nationality#readme",
+        "Source": "https://github.com/callidio/firstname_to_nationality",
+        "Tracker": "https://github.com/callidio/firstname_to_nationality/issues",
     },
 )
