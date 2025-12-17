@@ -57,7 +57,7 @@ class CityToNationality:
         self.geocoder = Nominatim(user_agent=user_agent, timeout=timeout)
         self.timeout = timeout
 
-        # Initialize country predictor for fallback
+        # Initialize country predictor for name-based predictions
         if model_path and dictionary_path:
             self.country_predictor = FirstnameToCountry(model_path, dictionary_path)
         else:
