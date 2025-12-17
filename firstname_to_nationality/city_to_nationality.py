@@ -7,7 +7,7 @@ it falls back to name-based prediction.
 """
 
 import time
-from typing import List, Tuple, Dict, Optional, Union, Any
+from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass
 
 from geopy.geocoders import Nominatim
@@ -60,9 +60,7 @@ class CityToNationality:
         # Initialize name-based predictors
         if model_path and dictionary_path:
             self.name_predictor = FirstnameToNationality(model_path, dictionary_path)
-            self.country_predictor = FirstnameToCountry(
-                model_path, dictionary_path
-            )
+            self.country_predictor = FirstnameToCountry(model_path, dictionary_path)
         else:
             self.name_predictor = FirstnameToNationality()
             self.country_predictor = FirstnameToCountry()
@@ -136,7 +134,10 @@ class CityToNationality:
         # Search through the nationality_to_country mapping (reverse lookup)
         country_code_lower = country_code.lower()
 
-        for nationality, country_info in self.country_predictor.nationality_to_country.items():
+        for (
+            nationality,
+            country_info,
+        ) in self.country_predictor.nationality_to_country.items():
             if (
                 country_info.get("alpha2", "").lower() == country_code_lower
                 or country_info.get("country_name", "").lower() == country_name.lower()

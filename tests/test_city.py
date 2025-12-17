@@ -49,9 +49,7 @@ class TestCityToNationalityGeocodingMocked(unittest.TestCase):
 
         # Mock location response
         mock_location = MagicMock()
-        mock_location.raw = {
-            "address": {"country_code": "it", "country": "Italy"}
-        }
+        mock_location.raw = {"address": {"country_code": "it", "country": "Italy"}}
         mock_geocoder.geocode.return_value = mock_location
 
         predictor = CityToNationality()
@@ -125,9 +123,7 @@ class TestCityToNationalityPrediction(unittest.TestCase):
         mock_nominatim_class.return_value = mock_geocoder
 
         mock_location = MagicMock()
-        mock_location.raw = {
-            "address": {"country_code": "it", "country": "Italy"}
-        }
+        mock_location.raw = {"address": {"country_code": "it", "country": "Italy"}}
         mock_geocoder.geocode.return_value = mock_location
 
         predictor = CityToNationality()
@@ -248,9 +244,7 @@ class TestCityToNationalityCountryMapping(unittest.TestCase):
     def test_country_code_to_nationality_fallback(self):
         """Test fallback nationality derivation from country name."""
         # Test with a country that might not be in the mapping
-        nationality = self.predictor._country_code_to_nationality(
-            "XY", "Testcountry"
-        )
+        nationality = self.predictor._country_code_to_nationality("XY", "Testcountry")
 
         self.assertIsNotNone(nationality)
         # Should have derived a nationality from the country name
