@@ -57,12 +57,10 @@ class CityToNationality:
         self.geocoder = Nominatim(user_agent=user_agent, timeout=timeout)
         self.timeout = timeout
 
-        # Initialize name-based predictors
+        # Initialize country predictor for fallback
         if model_path and dictionary_path:
-            self.name_predictor = FirstnameToNationality(model_path, dictionary_path)
             self.country_predictor = FirstnameToCountry(model_path, dictionary_path)
         else:
-            self.name_predictor = FirstnameToNationality()
             self.country_predictor = FirstnameToCountry()
 
     def _geocode_city(
@@ -115,8 +113,6 @@ class CityToNationality:
             except Exception:
                 # Unexpected error - will return None and fallback to name-based prediction
                 return None
-
-        return None
 
     def _country_code_to_nationality(
         self, country_code: str, country_name: str
@@ -201,15 +197,37 @@ class CityToNationality:
                 )
 
                 if nationality:
-                    return [
-                        {
-                            "nationality": nationality,
-                            "confidence": 1.0,
-                            "country_code": country_code,
-                            "country_name": country_name,
-                            "source": "city",
-                        }
-                    ]
+                    # City prediction successful - create base result
+                    city_result = {
+                        "nationality": nationality,
+                        "confidence": 1.0,
+                        "country_code": country_code,
+                        "country_name": country_name,
+                        "source": "city",
+                    }
+
+                    # If top_n is 1, return only city prediction
+                    if top_n == 1:
+                        return [city_result]
+
+                    # If top_n > 1, add name-based predictions to fill remaining slots
+                    results = [city_result]
+                    name_predictions = self.country_predictor.predict_single(
+                        name, top_n=top_n - 1, use_dict=use_dict
+                    )
+
+                    for pred in name_predictions:
+                        results.append(
+                            {
+                                "nationality": pred["nationality"],
+                                "confidence": pred["confidence"],
+                                "country_code": pred.get("country_code"),
+                                "country_name": pred.get("country_name"),
+                                "source": "name",
+                            }
+                        )
+
+                    return results
 
         # Fall back to name-based prediction
         country_predictions = self.country_predictor.predict_single(

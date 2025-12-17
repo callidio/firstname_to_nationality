@@ -17,7 +17,6 @@ class TestCityToNationalityInitialization(unittest.TestCase):
         predictor = CityToNationality()
 
         self.assertIsNotNone(predictor.geocoder)
-        self.assertIsNotNone(predictor.name_predictor)
         self.assertIsNotNone(predictor.country_predictor)
         self.assertEqual(predictor.timeout, 5)
 
@@ -96,6 +95,57 @@ class TestCityToNationalityGeocodingMocked(unittest.TestCase):
 
         self.assertIsNone(result)
 
+    @patch("firstname_to_nationality.city_to_nationality.time.sleep")
+    @patch("firstname_to_nationality.city_to_nationality.Nominatim")
+    def test_geocode_city_timeout_with_retry_success(
+        self, mock_nominatim_class, mock_sleep
+    ):
+        """Test geocoding timeout with successful retry."""
+        mock_geocoder = MagicMock()
+        mock_nominatim_class.return_value = mock_geocoder
+
+        # First call times out, second call succeeds
+        mock_location = MagicMock()
+        mock_location.raw = {"address": {"country_code": "fr", "country": "France"}}
+        mock_geocoder.geocode.side_effect = [
+            GeocoderTimedOut("Timeout"),
+            mock_location,
+        ]
+
+        predictor = CityToNationality()
+        result = predictor._geocode_city("Paris", max_retries=2)
+
+        # Should have retried and succeeded
+        self.assertIsNotNone(result)
+        self.assertEqual(result["country_code"], "FR")
+        self.assertEqual(result["country_name"], "France")
+        # Verify sleep was called once (before retry)
+        mock_sleep.assert_called_once_with(1)
+        # Verify geocode was called twice (initial + retry)
+        self.assertEqual(mock_geocoder.geocode.call_count, 2)
+
+    @patch("firstname_to_nationality.city_to_nationality.time.sleep")
+    @patch("firstname_to_nationality.city_to_nationality.Nominatim")
+    def test_geocode_city_timeout_with_retry_exhausted(
+        self, mock_nominatim_class, mock_sleep
+    ):
+        """Test geocoding timeout with all retries exhausted."""
+        mock_geocoder = MagicMock()
+        mock_nominatim_class.return_value = mock_geocoder
+
+        # All calls time out
+        mock_geocoder.geocode.side_effect = GeocoderTimedOut("Timeout")
+
+        predictor = CityToNationality()
+        result = predictor._geocode_city("SomeCity", max_retries=2)
+
+        # Should return None after all retries
+        self.assertIsNone(result)
+        # Verify sleep was called twice (before each retry)
+        self.assertEqual(mock_sleep.call_count, 2)
+        # Verify geocode was called 3 times (initial + 2 retries)
+        self.assertEqual(mock_geocoder.geocode.call_count, 3)
+
 
 class TestCityToNationalityPrediction(unittest.TestCase):
     """Tests for CityToNationality prediction methods."""
@@ -133,6 +183,30 @@ class TestCityToNationalityPrediction(unittest.TestCase):
         self.assertGreater(len(results), 0)
         self.assertEqual(results[0]["source"], "city")
         self.assertIsNotNone(results[0]["country_code"])
+
+    @patch("firstname_to_nationality.city_to_nationality.Nominatim")
+    def test_predict_single_with_city_top_n(self, mock_nominatim_class):
+        """Test prediction with city respects top_n parameter."""
+        # Mock successful geocoding
+        mock_geocoder = MagicMock()
+        mock_nominatim_class.return_value = mock_geocoder
+
+        mock_location = MagicMock()
+        mock_location.raw = {"address": {"country_code": "it", "country": "Italy"}}
+        mock_geocoder.geocode.return_value = mock_location
+
+        predictor = CityToNationality()
+        results = predictor.predict_single("Mario Rossi", city="Rome", top_n=3)
+
+        self.assertIsInstance(results, list)
+        # Should return up to 3 predictions
+        self.assertGreater(len(results), 0)
+        self.assertLessEqual(len(results), 3)
+        # First should be city-based
+        self.assertEqual(results[0]["source"], "city")
+        # If there are more results, they should be name-based
+        if len(results) > 1:
+            self.assertEqual(results[1]["source"], "name")
 
     def test_predict_single_with_invalid_city(self):
         """Test prediction with invalid city (fallback to name)."""
