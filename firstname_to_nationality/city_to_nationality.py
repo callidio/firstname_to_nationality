@@ -7,7 +7,7 @@ it falls back to name-based prediction.
 """
 
 import time
-from typing import List, Tuple, Dict, Optional, Union
+from typing import List, Tuple, Dict, Optional, Union, Any
 from dataclasses import dataclass
 
 from geopy.geocoders import Nominatim
@@ -107,15 +107,15 @@ class CityToNationality:
                     # Wait before retrying
                     time.sleep(1)
                     continue
-                print(f"Warning: Geocoding timed out for city '{city}'")
+                # Timeout - will return None and fallback to name-based prediction
                 return None
 
-            except GeocoderServiceError as e:
-                print(f"Warning: Geocoding service error for city '{city}': {e}")
+            except GeocoderServiceError:
+                # Service error - will return None and fallback to name-based prediction
                 return None
 
-            except Exception as e:
-                print(f"Warning: Unexpected error geocoding city '{city}': {e}")
+            except Exception:
+                # Unexpected error - will return None and fallback to name-based prediction
                 return None
 
         return None
@@ -174,7 +174,7 @@ class CityToNationality:
         city: Optional[str] = None,
         top_n: int = 1,
         use_dict: bool = True,
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Predict nationality for a single name, optionally using city.
 
@@ -235,7 +235,7 @@ class CityToNationality:
         cities: Optional[List[Optional[str]]] = None,
         top_n: int = 1,
         use_dict: bool = True,
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Predict nationalities for multiple names with optional cities.
 
@@ -268,7 +268,7 @@ class CityToNationality:
         cities: Optional[Union[str, List[Optional[str]]]] = None,
         top_n: int = 1,
         use_dict: bool = True,
-    ) -> Union[List[Dict[str, any]], Dict[str, any]]:
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Predict nationalities for one or more names with optional cities.
 
