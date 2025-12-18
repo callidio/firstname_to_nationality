@@ -26,6 +26,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
+          patchAll: true
+          skipInvalidTags: true
       
       - name: Set up Python
         if: steps.semver.outputs.next != ''
