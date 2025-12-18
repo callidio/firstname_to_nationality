@@ -11,14 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required to create branches
-      pull-requests: write  # Required to create PRs
+      pull-requests: write  # Required to create PRs (not sufficient with GITHUB_TOKEN)
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for version calculation
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT_TOKEN if available, otherwise fall back to GITHUB_TOKEN
+          # Note: GITHUB_TOKEN has restrictions on creating PRs that trigger workflows
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
       
       - name: Calculate next version
         id: semver
@@ -57,7 +59,10 @@ jobs:
         if: steps.semver.outputs.next != ''
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT_TOKEN if available for proper PR creation
+          # GITHUB_TOKEN cannot create PRs that trigger other workflows
+          # See: https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           commit-message: "chore(release): ${{ steps.semver.outputs.next }} [skip ci]"
           title: "chore(release): Bump version to ${{ steps.semver.outputs.next }}"
           body: |
@@ -70,6 +75,9 @@ jobs:
             
             ### Changelog
             ${{ steps.semver.outputs.changelog }}
+            
+            ---
+            **Note**: This PR was created by the auto-version-bump workflow.
           branch: release/${{ steps.semver.outputs.next }}
           delete-branch: true
           labels: |
