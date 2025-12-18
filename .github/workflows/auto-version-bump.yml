@@ -26,7 +26,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
-          noVersionBumpBehavior: silent
+          patchAll: true
           skipInvalidTags: true
       
       - name: Set up Python
