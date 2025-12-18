@@ -19,23 +19,15 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Extract version from branch name
-        id: extract_version
-        run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          VERSION="${BRANCH_NAME#release/}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Extracted version: ${VERSION}"
-      
       - name: Get version from setup.py
         id: get_version
         run: |
-          VERSION=$(grep -oP 'version="\K[^"]+' setup.py)
+          VERSION=$(grep 'version=' setup.py | sed -n 's/.*version="\([^"]*\)".*/\1/p')
           echo "setup_version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Version in setup.py: ${VERSION}"
       
       - name: Create GitHub Release
-        uses: ncipollo/create-release@v1
+        uses: ncipollo/create-release@v1.14.0
         with:
           tag: v${{ steps.get_version.outputs.setup_version }}
           name: Release v${{ steps.get_version.outputs.setup_version }}
