@@ -9,6 +9,9 @@ on:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push changes
+      pull-requests: write  # Required to create PRs
     
     steps:
       - name: Checkout repository
