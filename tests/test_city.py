@@ -316,13 +316,17 @@ class TestCityToNationalityCountryMapping(unittest.TestCase):
             self.assertIsNotNone(result)
 
     def test_country_code_to_nationality_fallback(self):
-        """Test fallback nationality derivation from country name."""
-        # Test with a country that might not be in the mapping
-        nationality = self.predictor._country_code_to_nationality("XY", "Testcountry")
+        """Test behavior when country is not found in CSV mapping."""
+        # Test with a country that is not in the mapping
+        with self.assertWarns(UserWarning) as warning_context:
+            nationality = self.predictor._country_code_to_nationality(
+                "XY", "Testcountry"
+            )
 
-        self.assertIsNotNone(nationality)
-        # Should have derived a nationality from the country name
-        self.assertIn("ian", nationality.lower())
+        # Should return None when not found
+        self.assertIsNone(nationality)
+        # Should warn that CSV needs to be updated
+        self.assertIn("not found in nationality mapping", str(warning_context.warning))
 
 
 class TestCityToNationalityEdgeCases(unittest.TestCase):

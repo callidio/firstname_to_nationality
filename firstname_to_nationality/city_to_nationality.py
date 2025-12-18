@@ -7,6 +7,7 @@ it falls back to name-based prediction.
 """
 
 import time
+import warnings
 from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass
 
@@ -141,28 +142,12 @@ class CityToNationality:
                 # Return the nationality with proper capitalization
                 return nationality.capitalize()
 
-        # Fallback: try to derive nationality from country name
-        # Simple heuristic: add "n" suffix or use country name + "ian"
-        if country_name:
-            # Special cases
-            special_cases = {
-                "United States": "American",
-                "United Kingdom": "British",
-                "The Netherlands": "Dutch",
-                "Switzerland": "Swiss",
-            }
-
-            if country_name in special_cases:
-                return special_cases[country_name]
-
-            # Default: append "n" or "an" suffix
-            if country_name.endswith("y"):
-                return country_name[:-1] + "ian"
-            elif country_name.endswith("a"):
-                return country_name + "n"
-            else:
-                return country_name + "ian"
-
+        # If not found, warn that the CSV needs to be updated
+        warnings.warn(
+            f"Country '{country_name}' (code: {country_code}) not found in "
+            f"nationality mapping. The country_nationality.csv file needs to be updated.",
+            UserWarning,
+        )
         return None
 
     def predict_single(
