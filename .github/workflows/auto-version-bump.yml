@@ -10,102 +10,66 @@ jobs:
   bump-version:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to push changes
+      contents: write  # Required to push changes and create releases
       pull-requests: write  # Required to create PRs
+      issues: write  # Required for semantic-release
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Full history needed for semantic-release
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Check if last commit is a version bump
-        id: check_commit
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install semantic-release
         run: |
-          LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Last commit message: $LAST_COMMIT_MSG"
-          
-          # Check if the last commit message contains version bump indicators
-          if echo "$LAST_COMMIT_MSG" | grep -qiE "(bump version|version bump|update version|chore: bump version)"; then
-            echo "Last commit was a version bump, skipping..."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Last commit was not a version bump, proceeding..."
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
+          npm install -g semantic-release@23 \
+            @semantic-release/commit-analyzer@12 \
+            @semantic-release/release-notes-generator@13 \
+            @semantic-release/changelog@6 \
+            @semantic-release/git@10 \
+            @semantic-release/github@10 \
+            @semantic-release/exec@6
       
       - name: Set up Python
-        if: steps.check_commit.outputs.skip == 'false'
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       
-      - name: Extract and bump version
-        if: steps.check_commit.outputs.skip == 'false'
-        id: bump
+      - name: Create semantic-release config
         run: |
-          # Extract current version from setup.py using portable grep/sed
-          CURRENT_VERSION=$(grep 'version=' setup.py | sed 's/.*version="\([^"]*\)".*/\1/')
-          echo "Current version: $CURRENT_VERSION"
-          
-          # Validate version format (MAJOR.MINOR.PATCH)
-          if ! echo "$CURRENT_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "Error: Invalid version format: $CURRENT_VERSION"
-            echo "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
-            exit 1
-          fi
-          
-          # Parse version components
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-          
-          # Increment patch version
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
-          
-          echo "New version: $NEW_VERSION"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          cat > .releaserc.json << 'EOF'
+          {
+            "branches": ["main"],
+            "plugins": [
+              "@semantic-release/commit-analyzer",
+              "@semantic-release/release-notes-generator",
+              [
+                "@semantic-release/exec",
+                {
+                  "prepareCmd": "sed -i 's/version=\"[^\"]*\"/version=\"${nextRelease.version}\"/' setup.py"
+                }
+              ],
+              [
+                "@semantic-release/git",
+                {
+                  "assets": ["setup.py"],
+                  "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+                }
+              ],
+              "@semantic-release/github"
+            ]
+          }
+          EOF
+          cat .releaserc.json
       
-      - name: Update version in setup.py
-        if: steps.check_commit.outputs.skip == 'false'
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Use sed with properly escaped version strings
-          CURRENT_VERSION="${{ steps.bump.outputs.current_version }}"
-          NEW_VERSION="${{ steps.bump.outputs.new_version }}"
-          
-          # Escape dots for sed regex
-          ESCAPED_CURRENT=$(echo "$CURRENT_VERSION" | sed 's/\./\\./g')
-          
-          sed -i "s/version=\"${ESCAPED_CURRENT}\"/version=\"${NEW_VERSION}\"/" setup.py
-          
-          # Verify the change
-          if grep -q "version=\"${NEW_VERSION}\"" setup.py; then
-            echo "✓ Version successfully updated to ${NEW_VERSION}"
-            grep "version=" setup.py
-          else
-            echo "✗ Error: Failed to update version"
-            exit 1
-          fi
-      
-      - name: Create Pull Request
-        if: steps.check_commit.outputs.skip == 'false'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: bump version to ${{ steps.bump.outputs.new_version }}"
-          title: "chore: bump version to ${{ steps.bump.outputs.new_version }}"
-          body: |
-            ## Automated Version Bump
-            
-            This PR was automatically created after a merge to the main branch.
-            
-            - Previous version: ${{ steps.bump.outputs.current_version }}
-            - New version: ${{ steps.bump.outputs.new_version }}
-            
-            This PR bumps the patch version in `setup.py`.
-          branch: auto-version-bump-${{ steps.bump.outputs.new_version }}
-          delete-branch: true
-          labels: |
-            automated
-            version-bump
+          semantic-release
