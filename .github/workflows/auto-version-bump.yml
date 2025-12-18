@@ -10,7 +10,7 @@ jobs:
   bump-version:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to push changes and create releases
+      contents: write  # Required to create branches
       pull-requests: write  # Required to create PRs
     
     steps:
@@ -70,8 +70,6 @@ jobs:
             
             ### Changelog
             ${{ steps.semver.outputs.changelog }}
-            
-            This PR will automatically create a release when merged.
           branch: release/${{ steps.semver.outputs.next }}
           delete-branch: true
           labels: |
