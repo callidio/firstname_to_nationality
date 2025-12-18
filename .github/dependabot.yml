@@ -16,7 +16,6 @@ updates:
       - "python"
     commit-message:
       prefix: "chore"
-      prefix-development: "chore"
       include: "scope"
   
   # Monitor GitHub Actions
