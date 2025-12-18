@@ -1,5 +1,13 @@
 name: Auto Version Bump
 
+# This workflow automatically bumps the version and creates a PR
+# 
+# SETUP REQUIRED: To avoid "Not permitted to create pull requests" error:
+# 1. Create a Personal Access Token (PAT) at https://github.com/settings/tokens
+# 2. Give it 'repo' and 'workflow' scopes
+# 3. Add it as a repository secret named 'PAT_TOKEN'
+# 4. See .github/WORKFLOW_SETUP.md for detailed instructions
+
 on:
   push:
     branches:
