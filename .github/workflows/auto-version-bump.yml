@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required to create branches
-      pull-requests: write  # Required to create PRs (not sufficient with GITHUB_TOKEN)
+      pull-requests: write  # Required to create PRs (GITHUB_TOKEN cannot trigger workflows from PRs)
     
     steps:
       - name: Checkout repository
