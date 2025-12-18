@@ -10,7 +10,7 @@ jobs:
   bump-version:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to push changes and create releases
+      contents: write  # Required to create branches
       pull-requests: write  # Required to create PRs
     
     steps:
@@ -53,23 +53,27 @@ jobs:
             exit 1
           fi
       
-      - name: Commit version bump
+      - name: Create Pull Request for version bump
         if: steps.semver.outputs.next != ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add setup.py
-          git commit -m "chore(release): ${{ steps.semver.outputs.next }} [skip ci]"
-          git push
-      
-      - name: Create GitHub Release
-        if: steps.semver.outputs.next != ''
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-pull-request@v6
         with:
-          tag_name: ${{ steps.semver.outputs.next }}
-          release_name: Release ${{ steps.semver.outputs.next }}
-          body: ${{ steps.semver.outputs.changelog }}
-          draft: false
-          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): ${{ steps.semver.outputs.next }} [skip ci]"
+          title: "chore(release): Bump version to ${{ steps.semver.outputs.next }}"
+          body: |
+            ## Version Bump to ${{ steps.semver.outputs.next }}
+            
+            This PR was automatically generated to bump the version.
+            
+            ### Changes
+            - Updated version in `setup.py` to `${{ steps.semver.outputs.next }}`
+            
+            ### Changelog
+            ${{ steps.semver.outputs.changelog }}
+          branch: release/${{ steps.semver.outputs.next }}
+          delete-branch: true
+          labels: |
+            release
+            automated
+          add-paths: |
+            setup.py
