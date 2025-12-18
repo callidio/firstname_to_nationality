@@ -95,8 +95,9 @@ This repository uses automated version management through GitHub Actions. See `.
 1. Commits are analyzed for conventional commit format
 2. Version bump type is determined (patch/minor/major)
 3. `setup.py` is automatically updated
-4. A new release is created on GitHub
-5. Commit includes `[skip ci]` to prevent infinite loops
+4. A pull request is created with the version bump
+5. After PR review and merge, releases are created manually by maintainers
+6. Commit includes `[skip ci]` to prevent infinite loops
 
 ### Commit Message Format
 
