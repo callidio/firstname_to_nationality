@@ -23,6 +23,7 @@ REQUIRED_PACKAGES = [
     "scikit-learn>=1.3.0",
     "joblib>=1.3.0",
     "pandas>=2.0.0",
+    "geopy>=2.3.0",
 ]
 
 OPTIONAL_PACKAGES = {
