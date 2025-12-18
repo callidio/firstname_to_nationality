@@ -12,64 +12,62 @@ jobs:
     permissions:
       contents: write  # Required to push changes and create releases
       pull-requests: write  # Required to create PRs
-      issues: write  # Required for semantic-release
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history needed for semantic-release
+          fetch-depth: 0  # Full history needed for version calculation
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Calculate next version
+        id: semver
+        uses: ietf-tools/semver-action@v1
         with:
-          node-version: '20'
-      
-      - name: Install semantic-release
-        run: |
-          npm install -g semantic-release@23 \
-            @semantic-release/commit-analyzer@12 \
-            @semantic-release/release-notes-generator@13 \
-            @semantic-release/changelog@6 \
-            @semantic-release/git@10 \
-            @semantic-release/github@10 \
-            @semantic-release/exec@6
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
       
       - name: Set up Python
+        if: steps.semver.outputs.next != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       
-      - name: Create semantic-release config
+      - name: Update version in setup.py
+        if: steps.semver.outputs.next != ''
         run: |
-          cat > .releaserc.json << 'EOF'
-          {
-            "branches": ["main"],
-            "plugins": [
-              "@semantic-release/commit-analyzer",
-              "@semantic-release/release-notes-generator",
-              [
-                "@semantic-release/exec",
-                {
-                  "prepareCmd": "sed -i 's/version=\"[^\"]*\"/version=\"${nextRelease.version}\"/' setup.py"
-                }
-              ],
-              [
-                "@semantic-release/git",
-                {
-                  "assets": ["setup.py"],
-                  "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-                }
-              ],
-              "@semantic-release/github"
-            ]
-          }
-          EOF
-          cat .releaserc.json
+          NEXT_VERSION="${{ steps.semver.outputs.next }}"
+          echo "Updating version to: $NEXT_VERSION"
+          
+          # Update version in setup.py
+          sed -i "s/version=\"[^\"]*\"/version=\"${NEXT_VERSION}\"/" setup.py
+          
+          # Verify the change
+          if grep -q "version=\"${NEXT_VERSION}\"" setup.py; then
+            echo "✓ Version successfully updated to ${NEXT_VERSION}"
+            grep "version=" setup.py
+          else
+            echo "✗ Error: Failed to update version"
+            exit 1
+          fi
       
-      - name: Run semantic-release
+      - name: Commit version bump
+        if: steps.semver.outputs.next != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add setup.py
+          git commit -m "chore(release): ${{ steps.semver.outputs.next }} [skip ci]"
+          git push
+      
+      - name: Create GitHub Release
+        if: steps.semver.outputs.next != ''
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          semantic-release
+        with:
+          tag_name: ${{ steps.semver.outputs.next }}
+          release_name: Release ${{ steps.semver.outputs.next }}
+          body: ${{ steps.semver.outputs.changelog }}
+          draft: false
+          prerelease: false
