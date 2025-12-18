@@ -8,6 +8,7 @@ This library provides the following capabilities:
 
 - ✅ **Python 3.13+ Compatible**: Uses Python features and type hints
 - ✅ **ML Stack**: Built with scikit-learn for performance and compatibility
+- ✅ **City-Based Prediction**: Use geopy geocoding for city-based nationality prediction
 - ✅ **Type Safety**: Full type hints and dataclasses throughout
 - ✅ **Error Handling**: Robust error handling and fallbacks
 - ✅ **Dev Container Ready**: Includes VS Code dev container configuration
@@ -37,6 +38,8 @@ pip install -e .
 
 ## 🔧 Quick Start
 
+### Basic Name-Based Prediction
+
 ```python
 from firstname_to_nationality import FirstnameToNationality
 
@@ -56,12 +59,46 @@ for name, predictions in results:
     print(f"{name} → {nationality} ({confidence:.2f})")
 ```
 
+### City-Based Prediction (New!)
+
+```python
+from firstname_to_nationality import CityToNationality
+
+# Initialize the city-based predictor
+predictor = CityToNationality()
+
+# Predict with city information (more accurate)
+result = predictor("Maria Garcia", cities="Barcelona")
+print(result)  # Spanish (from Barcelona, Spain)
+
+# Fallback to name-based prediction if no city
+result = predictor("Maria Garcia")
+print(result)  # Uses ML model on name
+
+# Batch prediction with cities
+names = ["John Smith", "Luigi Ferrari", "Zhang Wei"]
+cities = ["London", "Milan", "Beijing"]
+results = predictor(names, cities=cities)
+
+for item in results:
+    name = item["name"]
+    pred = item["predictions"][0]
+    print(f"{name} from {item['city']} → {pred['nationality']} ({pred['country_code']})")
+```
+
 ## 🧪 Examples
 
-Run the example script:
+Run the example scripts:
 
 ```bash
+# Basic name-based prediction
 python example.py
+
+# Country code mapping
+python example_country.py
+
+# City-based prediction with geocoding
+python example_city.py
 ```
 
 ## 🔥 Training Your Own Model
@@ -100,6 +137,8 @@ python nationality_trainer.py --dict
 The implementation consists of:
 
 - **`FirstnameToNationality`**: Main predictor class with scikit-learn backend  
+- **`FirstnameToCountry`**: Maps nationalities to country codes
+- **`CityToNationality`**: City-based prediction with geocoding fallback to name-based
 - **`NamePreprocessor`**: Advanced name preprocessing and normalization
 - **`PredictionResult`**: Type-safe prediction results using dataclasses
 - **Model Pipeline**: TF-IDF vectorization + Logistic Regression
@@ -169,6 +208,7 @@ The implementation offers:
 - numpy >= 1.25.0
 - pandas >= 2.0.0
 - joblib >= 1.3.0
+- geopy >= 2.3.0 (for city-based predictions)
 
 **Development:**
 - pytest, black, isort, pylint, mypy

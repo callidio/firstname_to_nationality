@@ -4,6 +4,9 @@ scikit-learn>=1.3.0
 joblib>=1.3.0
 pandas>=2.0.0
 
+# Geocoding for city-based predictions
+geopy>=2.3.0
+
 # Optional dependencies for enhanced functionality
 matplotlib>=3.7.0
 seaborn>=0.12.0
