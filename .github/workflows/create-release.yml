@@ -1,0 +1,51 @@
+name: Create Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  create-release:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases and tags
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION="${BRANCH_NAME#release/}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: ${VERSION}"
+      
+      - name: Get version from setup.py
+        id: get_version
+        run: |
+          VERSION=$(grep -oP 'version="\K[^"]+' setup.py)
+          echo "setup_version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version in setup.py: ${VERSION}"
+      
+      - name: Create GitHub Release
+        uses: ncipollo/create-release@v1
+        with:
+          tag: v${{ steps.get_version.outputs.setup_version }}
+          name: Release v${{ steps.get_version.outputs.setup_version }}
+          body: |
+            ## Release v${{ steps.get_version.outputs.setup_version }}
+            
+            This release was automatically created after merging the version bump PR.
+            
+            ### Changes
+            See the [pull request](${{ github.event.pull_request.html_url }}) for details.
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
