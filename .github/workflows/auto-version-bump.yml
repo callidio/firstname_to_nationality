@@ -42,9 +42,16 @@ jobs:
         if: steps.check_commit.outputs.skip == 'false'
         id: bump
         run: |
-          # Extract current version from setup.py
-          CURRENT_VERSION=$(grep -oP 'version="\K[^"]+' setup.py)
+          # Extract current version from setup.py using portable grep/sed
+          CURRENT_VERSION=$(grep 'version=' setup.py | sed 's/.*version="\([^"]*\)".*/\1/')
           echo "Current version: $CURRENT_VERSION"
+          
+          # Validate version format (MAJOR.MINOR.PATCH)
+          if ! echo "$CURRENT_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: Invalid version format: $CURRENT_VERSION"
+            echo "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
+            exit 1
+          fi
           
           # Parse version components
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
@@ -60,10 +67,23 @@ jobs:
       - name: Update version in setup.py
         if: steps.check_commit.outputs.skip == 'false'
         run: |
-          sed -i 's/version="${{ steps.bump.outputs.current_version }}"/version="${{ steps.bump.outputs.new_version }}"/' setup.py
+          # Use sed with properly escaped version strings
+          CURRENT_VERSION="${{ steps.bump.outputs.current_version }}"
+          NEW_VERSION="${{ steps.bump.outputs.new_version }}"
+          
+          # Escape dots for sed regex
+          ESCAPED_CURRENT=$(echo "$CURRENT_VERSION" | sed 's/\./\\./g')
+          
+          sed -i "s/version=\"${ESCAPED_CURRENT}\"/version=\"${NEW_VERSION}\"/" setup.py
           
           # Verify the change
-          grep "version=" setup.py
+          if grep -q "version=\"${NEW_VERSION}\"" setup.py; then
+            echo "✓ Version successfully updated to ${NEW_VERSION}"
+            grep "version=" setup.py
+          else
+            echo "✗ Error: Failed to update version"
+            exit 1
+          fi
       
       - name: Create Pull Request
         if: steps.check_commit.outputs.skip == 'false'
