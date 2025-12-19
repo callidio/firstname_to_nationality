@@ -86,18 +86,34 @@ To add monitoring for a new package ecosystem, add a new entry to the `updates` 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Semantic Versioning](https://semver.org/)
 
-## Automated Version Management
+## Automated Version Management & Releases
 
-This repository uses automated version management through GitHub Actions. See `.github/workflows/auto-version-bump.yml` for details.
+This repository uses fully automated version management and release creation through GitHub Actions.
 
-### How It Works
+### Automated Workflows
 
-1. Commits are analyzed for conventional commit format
-2. Version bump type is determined (patch/minor/major)
-3. `setup.py` is automatically updated
-4. A pull request is created with the version bump
-5. After PR review and merge, releases are created manually by maintainers
-6. Commit includes `[skip ci]` to prevent infinite loops
+1. **Version Bumping** (`.github/workflows/auto-version-bump.yml`)
+   - Commits are analyzed for conventional commit format
+   - Version bump type is determined (patch/minor/major)
+   - `setup.py` is automatically updated
+   - Changes are committed directly to main branch
+   - A git tag is created and pushed (e.g., `1.2.3`)
+
+2. **Release Creation** (`.github/workflows/release.yml`)
+   - Automatically triggered when a tag is pushed
+   - Creates a GitHub release with the tag
+   - Generates release notes using GitHub's AI-powered feature
+   - Release notes include all commits since the previous release
+
+3. **PyPI Publishing** (`.github/workflows/publish.yml`)
+   - Automatically triggered when a release is created
+   - Builds and publishes the package to PyPI
+
+### Complete Flow
+
+```
+Push to main → Auto version bump → Create tag → Auto release → Publish to PyPI
+```
 
 ### Commit Message Format
 
