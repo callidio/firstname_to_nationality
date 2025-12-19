@@ -221,6 +221,10 @@ The implementation offers:
 4. Format code: `black . && isort .`
 5. Check types: `mypy firstname_to_nationality/`
 
+### Setting Up GitHub Actions Workflows
+
+If you're a maintainer and need to set up the auto-version-bump workflow, see [.github/WORKFLOW_SETUP.md](.github/WORKFLOW_SETUP.md) for detailed instructions on configuring the required GitHub App for authentication.
+
 ## 📄 License
 
 MIT License

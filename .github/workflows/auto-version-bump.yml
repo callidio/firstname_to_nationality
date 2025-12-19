@@ -1,5 +1,8 @@
 name: Auto Version Bump
 
+# This workflow automatically bumps the version and pushes directly to main
+# using GitHub App authentication (AutoBot-Callidio)
+
 on:
   push:
     branches:
@@ -9,22 +12,30 @@ on:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
+    # Skip if the commit was made by the bot to prevent infinite loops
+    if: github.actor != 'AutoBot-Callidio[bot]' && github.event.head_commit.author.name != 'AutoBot-Callidio[bot]'
     permissions:
-      contents: write  # Required to create branches
-      pull-requests: write  # Required to create PRs
+      contents: write  # Required to push to main and create tags
     
     steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AUTOBOT_CALLIDIO_APP_ID }}
+          private-key: ${{ secrets.AUTOBOT_CALLIDIO_PRIVATE_KEY }}
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for version calculation
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
       
       - name: Calculate next version
         id: semver
         uses: ietf-tools/semver-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
           branch: main
           patchAll: true
           skipInvalidTags: true
@@ -53,27 +64,46 @@ jobs:
             exit 1
           fi
       
-      - name: Create Pull Request for version bump
+      - name: Configure Git
         if: steps.semver.outputs.next != ''
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(release): ${{ steps.semver.outputs.next }} [skip ci]"
-          title: "chore(release): Bump version to ${{ steps.semver.outputs.next }}"
-          body: |
-            ## Version Bump to ${{ steps.semver.outputs.next }}
-            
-            This PR was automatically generated to bump the version.
-            
-            ### Changes
-            - Updated version in `setup.py` to `${{ steps.semver.outputs.next }}`
-            
-            ### Changelog
-            ${{ steps.semver.outputs.changelog }}
-          branch: release/${{ steps.semver.outputs.next }}
-          delete-branch: true
-          labels: |
-            release
-            automated
-          add-paths: |
-            setup.py
+        run: |
+          git config user.name "AutoBot-Callidio[bot]"
+          git config user.email "autobot-callidio[bot]@users.noreply.github.com"
+      
+      - name: Commit, Push, and Tag version bump
+        if: steps.semver.outputs.next != ''
+        run: |
+          NEXT_VERSION="${{ steps.semver.outputs.next }}"
+          
+          # Add the changed file
+          git add setup.py
+          
+          # Create commit message file so expressions are safely written as data
+          cat > /tmp/commit-msg.txt << EOF
+          chore(release): bump version to ${{ steps.semver.outputs.next }}
+          
+          Automated version bump by AutoBot-Callidio
+          
+          Changelog:
+          ${{ steps.semver.outputs.changelog }}
+          EOF
+          
+          # Commit the changes using the message file
+          git commit -F /tmp/commit-msg.txt
+          
+          # Create tag message file to handle special characters safely
+          cat > /tmp/tag-msg.txt << EOF
+          Release version ${{ steps.semver.outputs.next }}
+          
+          Changelog:
+          ${{ steps.semver.outputs.changelog }}
+          EOF
+          
+          # Create an annotated tag using the message file (without v prefix)
+          git tag -a "${NEXT_VERSION}" -F /tmp/tag-msg.txt
+          
+          # Push commit and tag together atomically
+          # If either fails, both will fail and nothing gets pushed
+          git push origin main "${NEXT_VERSION}"
+          
+          echo "✓ Successfully pushed version bump and tag ${NEXT_VERSION}"
