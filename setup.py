@@ -49,7 +49,7 @@ CORE_PACKAGES = [req for req in REQUIRED_PACKAGES if not any(pkg in req for pkg 
 
 setuptools.setup(
     name="firstname-to-nationality",
-    version="1.1.5",
+    version="1.1.6",
     author="Firstname to Nationality Team",
     author_email="",
     description="Nationality Prediction from Firstname using Python 3.13 and scikit-learn",
