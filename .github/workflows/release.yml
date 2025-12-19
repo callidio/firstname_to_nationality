@@ -37,8 +37,8 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Creating release for tag: ${TAG_NAME}"
       
-      - name: Generate Release Notes
-        id: release_notes
+      - name: Create Release with Generated Notes
+        id: create_release_with_notes
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
