@@ -5,8 +5,27 @@ This module provides helper functions for parsing requirements files
 and managing package dependencies.
 """
 
+import re
 from pathlib import Path
 from typing import List, Set
+
+
+def _extract_package_name(requirement: str) -> str:
+    """Extract package name from a requirement string.
+    
+    Handles various version specifiers: ==, >=, <=, >, <, !=, ~=, ===
+    
+    Args:
+        requirement: Requirement string (e.g., 'numpy==1.0.0', 'pandas>=2.0')
+        
+    Returns:
+        Package name without version specifier
+    """
+    # Use regex to extract package name before any version specifier
+    match = re.match(r'^([a-zA-Z0-9\-_.]+)', requirement)
+    if match:
+        return match.group(1).strip()
+    return requirement.strip()
 
 
 def read_requirements(filename: str, base_path: Path = None) -> List[str]:
@@ -79,9 +98,7 @@ def filter_packages_by_name(requirements: List[str], package_names: Set[str]) ->
     """
     filtered = []
     for req in requirements:
-        # Extract package name (before version specifier)
-        # Handle ==, >=, <=, >, <, !=, ~=, ===
-        package_name = req.split("==")[0].split(">=")[0].split("<=")[0].split(">")[0].split("<")[0].split("!=")[0].split("~=")[0].split("===")[0].strip()
+        package_name = _extract_package_name(req)
         if package_name in package_names:
             filtered.append(req)
     return filtered
@@ -101,8 +118,7 @@ def exclude_packages_by_name(requirements: List[str], package_names: Set[str]) -
     """
     filtered = []
     for req in requirements:
-        # Extract package name (before version specifier)
-        package_name = req.split("==")[0].split(">=")[0].split("<=")[0].split(">")[0].split("<")[0].split("!=")[0].split("~=")[0].split("===")[0].strip()
+        package_name = _extract_package_name(req)
         if package_name not in package_names:
             filtered.append(req)
     return filtered

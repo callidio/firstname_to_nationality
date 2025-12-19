@@ -9,7 +9,60 @@ import pytest
 from pathlib import Path
 import tempfile
 import os
-from setup_utils import read_requirements, filter_packages_by_name, exclude_packages_by_name
+from setup_utils import (
+    read_requirements,
+    filter_packages_by_name,
+    exclude_packages_by_name,
+    _extract_package_name,
+)
+
+
+class TestExtractPackageName:
+    """Tests for _extract_package_name helper function."""
+
+    def test_extract_with_equal_equal(self):
+        """Test extraction with == specifier."""
+        assert _extract_package_name("numpy==1.0.0") == "numpy"
+
+    def test_extract_with_greater_equal(self):
+        """Test extraction with >= specifier."""
+        assert _extract_package_name("pandas>=2.0.0") == "pandas"
+
+    def test_extract_with_less_equal(self):
+        """Test extraction with <= specifier."""
+        assert _extract_package_name("matplotlib<=3.0.0") == "matplotlib"
+
+    def test_extract_with_greater(self):
+        """Test extraction with > specifier."""
+        assert _extract_package_name("scipy>1.0") == "scipy"
+
+    def test_extract_with_less(self):
+        """Test extraction with < specifier."""
+        assert _extract_package_name("scikit-learn<2.0") == "scikit-learn"
+
+    def test_extract_with_not_equal(self):
+        """Test extraction with != specifier."""
+        assert _extract_package_name("joblib!=1.0.0") == "joblib"
+
+    def test_extract_with_tilde_equal(self):
+        """Test extraction with ~= specifier."""
+        assert _extract_package_name("requests~=2.0") == "requests"
+
+    def test_extract_with_triple_equal(self):
+        """Test extraction with === specifier."""
+        assert _extract_package_name("package===1.0.0") == "package"
+
+    def test_extract_with_hyphen_in_name(self):
+        """Test extraction with hyphenated package name."""
+        assert _extract_package_name("scikit-learn==1.0.0") == "scikit-learn"
+
+    def test_extract_with_underscore_in_name(self):
+        """Test extraction with underscored package name."""
+        assert _extract_package_name("some_package==1.0.0") == "some_package"
+
+    def test_extract_no_version_specifier(self):
+        """Test extraction with no version specifier."""
+        assert _extract_package_name("numpy") == "numpy"
 
 
 class TestReadRequirements:
