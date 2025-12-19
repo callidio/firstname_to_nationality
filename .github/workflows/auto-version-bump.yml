@@ -78,8 +78,8 @@ jobs:
           # Add the changed file
           git add setup.py
           
-          # Create commit message file to handle special characters safely
-          cat > /tmp/commit-msg.txt << 'EOF'
+          # Create commit message file so expressions are safely written as data
+          cat > /tmp/commit-msg.txt << EOF
           chore(release): bump version to ${{ steps.semver.outputs.next }}
           
           Automated version bump by AutoBot-Callidio
