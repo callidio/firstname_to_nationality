@@ -15,7 +15,6 @@ from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
 from .firstname_to_country import FirstnameToCountry
-from .firstname_to_nationality import FirstnameToNationality
 
 
 @dataclass
