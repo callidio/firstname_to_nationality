@@ -1,0 +1,68 @@
+name: Auto Release
+
+# This workflow automatically creates a GitHub release when a tag is pushed
+# It uses GitHub's built-in release notes generation which includes AI-powered summaries
+
+on:
+  push:
+    tags:
+      - '*'  # Trigger on any tag push
+
+permissions:
+  contents: write  # Required to create releases
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AUTOBOT_CALLIDIO_APP_ID }}
+          private-key: ${{ secrets.AUTOBOT_CALLIDIO_PRIVATE_KEY }}
+      
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for release notes
+          token: ${{ steps.generate_token.outputs.token }}
+      
+      - name: Get tag name
+        id: tag
+        run: |
+          # Extract tag name from ref
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "Creating release for tag: ${TAG_NAME}"
+      
+      - name: Create Release with Generated Notes
+        id: create_release_with_notes
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          TAG_NAME="${{ steps.tag.outputs.tag_name }}"
+          
+          # Get the previous tag for comparison
+          # List all tags sorted by semantic version (descending), exclude current tag, take first
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${TAG_NAME}$" | head -n 1 || echo "")
+          
+          # Generate release notes using GitHub CLI
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Generating release notes from ${PREVIOUS_TAG} to ${TAG_NAME}"
+            gh release create "${TAG_NAME}" \
+              --title "Release ${TAG_NAME}" \
+              --generate-notes \
+              --notes-start-tag "${PREVIOUS_TAG}"
+          else
+            echo "No previous tag found, generating notes from beginning"
+            gh release create "${TAG_NAME}" \
+              --title "Release ${TAG_NAME}" \
+              --generate-notes
+          fi
+      
+      - name: Release Created
+        run: |
+          echo "✓ Successfully created release for tag ${{ steps.tag.outputs.tag_name }}"
+          echo "View release at: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.tag_name }}"

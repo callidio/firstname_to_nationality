@@ -221,6 +221,25 @@ The implementation offers:
 4. Format code: `black . && isort .`
 5. Check types: `mypy firstname_to_nationality/`
 
+### Automated Release Process
+
+This repository uses a fully automated release workflow:
+
+1. **Push your code** to the `main` branch
+2. **Version is automatically bumped** based on conventional commit messages
+3. **GitHub release is created** automatically with AI-generated release notes
+4. **Package is published** to PyPI automatically
+
+For more details, see [.github/WORKFLOW_SETUP.md](.github/WORKFLOW_SETUP.md).
+
+### Commit Message Format
+
+Use conventional commits for automatic version bumping:
+
+- `fix: description` → Patch version bump (1.0.0 → 1.0.1)
+- `feat: description` → Minor version bump (1.0.0 → 1.1.0)
+- `feat!: description` → Major version bump (1.0.0 → 2.0.0)
+
 ### Setting Up GitHub Actions Workflows
 
 If you're a maintainer and need to set up the auto-version-bump workflow, see [.github/WORKFLOW_SETUP.md](.github/WORKFLOW_SETUP.md) for detailed instructions on configuring the required GitHub App for authentication.
