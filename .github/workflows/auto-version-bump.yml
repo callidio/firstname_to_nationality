@@ -76,11 +76,18 @@ jobs:
           # Add the changed file
           git add setup.py
           
-          # Commit the changes
-          git commit -m "chore(release): bump version to ${NEXT_VERSION}" \
-                     -m "Automated version bump by AutoBot-Callidio" \
-                     -m "Changelog:" \
-                     -m "${{ steps.semver.outputs.changelog }}"
+          # Create commit message file to handle special characters safely
+          cat > /tmp/commit-msg.txt << 'EOF'
+          chore(release): bump version to ${{ steps.semver.outputs.next }}
+          
+          Automated version bump by AutoBot-Callidio
+          
+          Changelog:
+          ${{ steps.semver.outputs.changelog }}
+          EOF
+          
+          # Commit the changes using the message file
+          git commit -F /tmp/commit-msg.txt
           
           # Push to main
           git push origin main
@@ -90,10 +97,16 @@ jobs:
         run: |
           NEXT_VERSION="${{ steps.semver.outputs.next }}"
           
-          # Create an annotated tag
-          git tag -a "v${NEXT_VERSION}" -m "Release version ${NEXT_VERSION}" \
-                  -m "Changelog:" \
-                  -m "${{ steps.semver.outputs.changelog }}"
+          # Create tag message file to handle special characters safely
+          cat > /tmp/tag-msg.txt << 'EOF'
+          Release version ${{ steps.semver.outputs.next }}
+          
+          Changelog:
+          ${{ steps.semver.outputs.changelog }}
+          EOF
+          
+          # Create an annotated tag using the message file
+          git tag -a "v${NEXT_VERSION}" -F /tmp/tag-msg.txt
           
           # Push the tag
           git push origin "v${NEXT_VERSION}"
