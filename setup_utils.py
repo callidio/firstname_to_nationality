@@ -7,7 +7,7 @@ and managing package dependencies.
 
 import re
 from pathlib import Path
-from typing import List, Set
+from typing import List, Optional, Set
 
 
 def _extract_package_name(requirement: str) -> str:
@@ -28,7 +28,7 @@ def _extract_package_name(requirement: str) -> str:
     return requirement.strip()
 
 
-def read_requirements(filename: str, base_path: Path = None) -> List[str]:
+def read_requirements(filename: str, base_path: Optional[Path] = None) -> List[str]:
     r"""Read requirements from a file and return as list.
 
     Supports:
