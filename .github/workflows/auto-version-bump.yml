@@ -12,6 +12,8 @@ on:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
+    # Skip if the commit was made by the bot to prevent infinite loops
+    if: github.event.head_commit.author.name != 'AutoBot-Callidio[bot]'
     permissions:
       contents: write  # Required to push to main and create tags
     
@@ -105,10 +107,10 @@ jobs:
           ${{ steps.semver.outputs.changelog }}
           EOF
           
-          # Create an annotated tag using the message file
-          git tag -a "v${NEXT_VERSION}" -F /tmp/tag-msg.txt
+          # Create an annotated tag using the message file (without v prefix)
+          git tag -a "${NEXT_VERSION}" -F /tmp/tag-msg.txt
           
           # Push the tag
-          git push origin "v${NEXT_VERSION}"
+          git push origin "${NEXT_VERSION}"
           
-          echo "✓ Created and pushed tag v${NEXT_VERSION}"
+          echo "✓ Created and pushed tag ${NEXT_VERSION}"
