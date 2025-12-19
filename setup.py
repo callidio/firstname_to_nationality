@@ -6,6 +6,8 @@ Implementation using ML libraries for nationality prediction.
 
 import setuptools
 from pathlib import Path
+from setup_utils import read_requirements, filter_packages_by_name, exclude_packages_by_name
+
 
 # Read README file
 readme_path = Path(__file__).parent / "README.md"
@@ -17,25 +19,21 @@ else:
         "Firstname to Nationality Predictor using Python 3.13 and scikit-learn"
     )
 
-# Dependencies for Python 3.13
-REQUIRED_PACKAGES = [
-    "numpy>=1.25.0",
-    "scikit-learn>=1.3.0",
-    "joblib>=1.3.0",
-    "pandas>=2.0.0",
-    "geopy>=2.3.0",
-]
+# Read dependencies from requirements.txt - single source of truth
+REQUIRED_PACKAGES = read_requirements("requirements.txt")
+DEV_PACKAGES = read_requirements("requirements-dev.txt")
 
+# Visualization packages (explicitly defined)
+VISUALIZATION_PACKAGES = {"matplotlib", "seaborn"}
+
+# Optional packages for visualization
 OPTIONAL_PACKAGES = {
-    "viz": ["matplotlib>=3.7.0", "seaborn>=0.12.0"],
-    "dev": [
-        "pytest>=7.4.0",
-        "black>=23.0.0",
-        "isort>=5.12.0",
-        "pylint>=2.17.0",
-        "mypy>=1.5.0",
-    ],
+    "viz": filter_packages_by_name(REQUIRED_PACKAGES, VISUALIZATION_PACKAGES),
+    "dev": DEV_PACKAGES,
 }
+
+# Core packages (excluding optional visualization)
+CORE_PACKAGES = exclude_packages_by_name(REQUIRED_PACKAGES, VISUALIZATION_PACKAGES)
 
 setuptools.setup(
     name="firstname-to-nationality",
@@ -43,7 +41,7 @@ setuptools.setup(
     author="Firstname to Nationality Team",
     author_email="",
     description="Nationality Prediction from Firstname using Python 3.13 and scikit-learn",
-    install_requires=REQUIRED_PACKAGES,
+    install_requires=CORE_PACKAGES,
     extras_require=OPTIONAL_PACKAGES,
     license="MIT",
     long_description=long_description,

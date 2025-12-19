@@ -3,8 +3,9 @@ Unit tests for the CityToNationality class.
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError
+from unittest.mock import MagicMock, patch
+
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 
 from firstname_to_nationality import CityToNationality
 

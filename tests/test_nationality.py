@@ -2,9 +2,9 @@
 Unit tests for the FirstnameToNationality class.
 """
 
-import unittest
-import tempfile
 import pickle
+import tempfile
+import unittest
 from pathlib import Path
 
 from firstname_to_nationality import FirstnameToNationality
