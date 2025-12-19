@@ -70,8 +70,16 @@ pip install .[viz,dev]
 The `setup.py` file automatically reads dependencies from the requirements files:
 
 ```python
-def read_requirements(filename):
-    """Read requirements from a file and return as list."""
+def read_requirements(filename: str, base_path: Path = None) -> List[str]:
+    """Read requirements from a file and return as list.
+    
+    Args:
+        filename: Name of the requirements file (e.g., 'requirements.txt')
+        base_path: Base directory path. If None, uses the directory of this module.
+    
+    Returns:
+        List of requirement strings without comments or empty lines
+    """
     # Reads and parses requirements.txt or requirements-dev.txt
     # Skips comments and empty lines
     ...
