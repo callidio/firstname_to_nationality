@@ -8,16 +8,16 @@ features for predicting nationality from names.
 import os
 import pickle
 import re
-from pathlib import Path
-from typing import List, Tuple, Union, Optional, Dict, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
-import joblib
 
 # Constants - file paths for model and dictionary
 MODEL_PATH = os.path.dirname(os.path.abspath(__file__)) + "/best-model.pt"

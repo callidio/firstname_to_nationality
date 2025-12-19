@@ -2,11 +2,11 @@
 Unit tests for the FirstnameToCountry class.
 """
 
-import unittest
-import tempfile
 import csv
+import tempfile
+import unittest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from firstname_to_nationality import FirstnameToCountry
 

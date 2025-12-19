@@ -5,14 +5,13 @@ This module extends the FirstnameToNationality predictor to map names to countri
 using a nationality-to-country mapping CSV file.
 """
 
-import os
 import csv
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+import os
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 from .firstname_to_nationality import FirstnameToNationality
-
 
 # Constants
 COUNTRY_NATIONALITY_CSV = (

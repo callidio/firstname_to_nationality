@@ -5,15 +5,11 @@ Tests the utility functions used by setup.py for parsing requirements
 and filtering packages.
 """
 
-import pytest
-from pathlib import Path
-import tempfile
-import os
 from setup_utils import (
-    read_requirements,
-    filter_packages_by_name,
-    exclude_packages_by_name,
     _extract_package_name,
+    exclude_packages_by_name,
+    filter_packages_by_name,
+    read_requirements,
 )
 
 
@@ -72,7 +68,7 @@ class TestReadRequirements:
         """Test reading a simple requirements file."""
         req_file = tmp_path / "requirements.txt"
         req_file.write_text("numpy==1.0.0\npandas==2.0.0\n")
-        
+
         result = read_requirements("requirements.txt", base_path=tmp_path)
         assert result == ["numpy==1.0.0", "pandas==2.0.0"]
 
@@ -85,7 +81,7 @@ class TestReadRequirements:
             "# Another comment\n"
             "pandas==2.0.0\n"
         )
-        
+
         result = read_requirements("requirements.txt", base_path=tmp_path)
         assert result == ["numpy==1.0.0", "pandas==2.0.0"]
 
@@ -96,7 +92,7 @@ class TestReadRequirements:
             "numpy==1.0.0  # inline comment\n"
             "pandas==2.0.0 # another inline comment\n"
         )
-        
+
         result = read_requirements("requirements.txt", base_path=tmp_path)
         assert result == ["numpy==1.0.0", "pandas==2.0.0"]
 
@@ -104,11 +100,9 @@ class TestReadRequirements:
         """Test reading requirements file with line continuations."""
         req_file = tmp_path / "requirements.txt"
         req_file.write_text(
-            "numpy==1.0.0\n"
-            "pandas==2.0.0 \\\n"
-            "  --hash=sha256:abc123\n"
+            "numpy==1.0.0\n" "pandas==2.0.0 \\\n" "  --hash=sha256:abc123\n"
         )
-        
+
         result = read_requirements("requirements.txt", base_path=tmp_path)
         # Line continuation should combine lines
         assert len(result) == 2
@@ -119,13 +113,8 @@ class TestReadRequirements:
     def test_read_requirements_with_empty_lines(self, tmp_path):
         """Test reading requirements file with empty lines."""
         req_file = tmp_path / "requirements.txt"
-        req_file.write_text(
-            "numpy==1.0.0\n"
-            "\n"
-            "pandas==2.0.0\n"
-            "\n"
-        )
-        
+        req_file.write_text("numpy==1.0.0\n" "\n" "pandas==2.0.0\n" "\n")
+
         result = read_requirements("requirements.txt", base_path=tmp_path)
         assert result == ["numpy==1.0.0", "pandas==2.0.0"]
 

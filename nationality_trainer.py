@@ -5,11 +5,13 @@ Training script for Firstname to Nationality prediction model.
 This script provides utilities for training the FirstnameToNationality model with your own data.
 """
 
-import sys
 import pickle
+import sys
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
+
 import pandas as pd
+
 from firstname_to_nationality import FirstnameToNationality
 
 

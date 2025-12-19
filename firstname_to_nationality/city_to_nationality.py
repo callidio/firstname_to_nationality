@@ -8,14 +8,14 @@ it falls back to name-based prediction.
 
 import time
 import warnings
-from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
 
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
-from .firstname_to_nationality import FirstnameToNationality
 from .firstname_to_country import FirstnameToCountry
+from .firstname_to_nationality import FirstnameToNationality
 
 
 @dataclass

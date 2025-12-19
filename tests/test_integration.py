@@ -2,12 +2,12 @@
 Integration tests for the complete workflow.
 """
 
-import unittest
-import tempfile
 import csv
+import tempfile
+import unittest
 from pathlib import Path
 
-from firstname_to_nationality import FirstnameToNationality, FirstnameToCountry
+from firstname_to_nationality import FirstnameToCountry, FirstnameToNationality
 
 
 class TestEndToEndWorkflow(unittest.TestCase):
