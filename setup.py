@@ -6,52 +6,7 @@ Implementation using ML libraries for nationality prediction.
 
 import setuptools
 from pathlib import Path
-
-
-def read_requirements(filename):
-    """Read requirements from a file and return as list.
-
-    Supports:
-    - Line continuations using a trailing backslash (`\`)
-    - Inline comments starting with `#`
-    """
-    requirements_path = Path(__file__).parent / filename
-    if not requirements_path.exists():
-        return []
-
-    requirements = []
-    current_line = ""
-    with open(requirements_path, mode="r", encoding="utf-8") as f:
-        for raw_line in f:
-            line = raw_line.strip()
-            # Skip empty lines and full-line comments
-            if not line or line.startswith("#"):
-                continue
-
-            # Handle line continuations with backslash
-            if line.endswith("\\"):
-                # Remove the trailing backslash and accumulate
-                current_line += line[:-1].rstrip() + " "
-                continue
-
-            # Append the final segment of this logical line
-            current_line += line
-
-            # Strip inline comments from the accumulated logical line
-            comment_index = current_line.find("#")
-            if comment_index != -1:
-                current_line = current_line[:comment_index].rstrip()
-
-            if current_line:
-                requirements.append(current_line)
-
-            # Reset for the next logical requirement line
-            current_line = ""
-
-    # In case the file ends with a continuation without a final newline
-    if current_line.strip():
-        requirements.append(current_line.strip())
-    return requirements
+from setup_utils import read_requirements, filter_packages_by_name, exclude_packages_by_name
 
 
 # Read README file
@@ -68,14 +23,17 @@ else:
 REQUIRED_PACKAGES = read_requirements("requirements.txt")
 DEV_PACKAGES = read_requirements("requirements-dev.txt")
 
+# Visualization packages (explicitly defined)
+VISUALIZATION_PACKAGES = {"matplotlib", "seaborn"}
+
 # Optional packages for visualization
 OPTIONAL_PACKAGES = {
-    "viz": [req for req in REQUIRED_PACKAGES if any(pkg in req for pkg in ["matplotlib", "seaborn"])],
+    "viz": filter_packages_by_name(REQUIRED_PACKAGES, VISUALIZATION_PACKAGES),
     "dev": DEV_PACKAGES,
 }
 
 # Core packages (excluding optional visualization)
-CORE_PACKAGES = [req for req in REQUIRED_PACKAGES if not any(pkg in req for pkg in ["matplotlib", "seaborn"])]
+CORE_PACKAGES = exclude_packages_by_name(REQUIRED_PACKAGES, VISUALIZATION_PACKAGES)
 
 setuptools.setup(
     name="firstname-to-nationality",
