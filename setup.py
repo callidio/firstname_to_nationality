@@ -7,6 +7,23 @@ Implementation using ML libraries for nationality prediction.
 import setuptools
 from pathlib import Path
 
+
+def read_requirements(filename):
+    """Read requirements from a file and return as list."""
+    requirements_path = Path(__file__).parent / filename
+    if not requirements_path.exists():
+        return []
+    
+    requirements = []
+    with open(requirements_path, mode="r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            # Skip comments and empty lines
+            if line and not line.startswith("#"):
+                requirements.append(line)
+    return requirements
+
+
 # Read README file
 readme_path = Path(__file__).parent / "README.md"
 if readme_path.exists():
@@ -17,25 +34,18 @@ else:
         "Firstname to Nationality Predictor using Python 3.13 and scikit-learn"
     )
 
-# Dependencies for Python 3.13
-REQUIRED_PACKAGES = [
-    "numpy>=1.25.0",
-    "scikit-learn>=1.3.0",
-    "joblib>=1.3.0",
-    "pandas>=2.0.0",
-    "geopy>=2.3.0",
-]
+# Read dependencies from requirements.txt - single source of truth
+REQUIRED_PACKAGES = read_requirements("requirements.txt")
+DEV_PACKAGES = read_requirements("requirements-dev.txt")
 
+# Optional packages for visualization
 OPTIONAL_PACKAGES = {
-    "viz": ["matplotlib>=3.7.0", "seaborn>=0.12.0"],
-    "dev": [
-        "pytest>=7.4.0",
-        "black>=23.0.0",
-        "isort>=5.12.0",
-        "pylint>=2.17.0",
-        "mypy>=1.5.0",
-    ],
+    "viz": [req for req in REQUIRED_PACKAGES if any(pkg in req for pkg in ["matplotlib", "seaborn"])],
+    "dev": DEV_PACKAGES,
 }
+
+# Core packages (excluding optional visualization)
+CORE_PACKAGES = [req for req in REQUIRED_PACKAGES if not any(pkg in req for pkg in ["matplotlib", "seaborn"])]
 
 setuptools.setup(
     name="firstname-to-nationality",
@@ -43,7 +53,7 @@ setuptools.setup(
     author="Firstname to Nationality Team",
     author_email="",
     description="Nationality Prediction from Firstname using Python 3.13 and scikit-learn",
-    install_requires=REQUIRED_PACKAGES,
+    install_requires=CORE_PACKAGES,
     extras_require=OPTIONAL_PACKAGES,
     license="MIT",
     long_description=long_description,
