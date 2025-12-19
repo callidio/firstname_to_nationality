@@ -100,7 +100,7 @@ jobs:
           NEXT_VERSION="${{ steps.semver.outputs.next }}"
           
           # Create tag message file to handle special characters safely
-          cat > /tmp/tag-msg.txt << 'EOF'
+          cat > /tmp/tag-msg.txt << EOF
           Release version ${{ steps.semver.outputs.next }}
           
           Changelog:
