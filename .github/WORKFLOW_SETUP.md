@@ -23,14 +23,14 @@ When a tag is pushed (automatically by the version bump workflow or manually), t
 #### How It Works
 
 1. **Trigger**: Runs automatically when any tag is pushed to the repository
-2. **Release Notes**: Uses GitHub's built-in AI-powered release notes generation
+2. **Release Notes**: Uses GitHub's automatic release notes generation
 3. **Changelog**: Automatically generates changelog from commits since last release
 4. **GitHub Release**: Creates a release with the tag name and generated notes
 
 #### Features
 
 - ✅ **Fully Automated**: No manual intervention required
-- ✅ **AI-Powered Notes**: GitHub Copilot generates meaningful release notes
+- ✅ **Automatic Notes**: GitHub automatically generates meaningful release notes
 - ✅ **Changelog Generation**: Automatically includes all changes since previous tag
 - ✅ **GitHub App Auth**: Uses AutoBot-Callidio app for consistent authentication
 
