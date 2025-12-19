@@ -1,12 +1,7 @@
 name: Auto Version Bump
 
-# This workflow automatically bumps the version and creates a PR
-# 
-# SETUP REQUIRED: To avoid "Not permitted to create pull requests" error:
-# 1. Create a Personal Access Token (PAT) at https://github.com/settings/tokens
-# 2. Give it 'repo' and 'workflow' scopes
-# 3. Add it as a repository secret named 'PAT_TOKEN'
-# 4. See .github/WORKFLOW_SETUP.md for detailed instructions
+# This workflow automatically bumps the version and pushes directly to main
+# using GitHub App authentication (AutoBot-Callidio)
 
 on:
   push:
@@ -18,23 +13,27 @@ jobs:
   bump-version:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to create branches
-      pull-requests: write  # Required to create PRs (GITHUB_TOKEN cannot trigger workflows from PRs)
+      contents: write  # Required to push to main and create tags
     
     steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AUTOBOT_CALLIDIO_APP_ID }}
+          private-key: ${{ secrets.AUTOBOT_CALLIDIO_PRIVATE_KEY }}
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for version calculation
-          # Use PAT_TOKEN if available, otherwise fall back to GITHUB_TOKEN
-          # Note: GITHUB_TOKEN has restrictions on creating PRs that trigger workflows
-          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
       
       - name: Calculate next version
         id: semver
         uses: ietf-tools/semver-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
           branch: main
           patchAll: true
           skipInvalidTags: true
@@ -63,33 +62,40 @@ jobs:
             exit 1
           fi
       
-      - name: Create Pull Request for version bump
+      - name: Configure Git
         if: steps.semver.outputs.next != ''
-        uses: peter-evans/create-pull-request@v6
-        with:
-          # Use PAT_TOKEN if available for proper PR creation
-          # GITHUB_TOKEN cannot create PRs that trigger other workflows
-          # See: https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
-          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
-          commit-message: "chore(release): ${{ steps.semver.outputs.next }} [skip ci]"
-          title: "chore(release): Bump version to ${{ steps.semver.outputs.next }}"
-          body: |
-            ## Version Bump to ${{ steps.semver.outputs.next }}
-            
-            This PR was automatically generated to bump the version.
-            
-            ### Changes
-            - Updated version in `setup.py` to `${{ steps.semver.outputs.next }}`
-            
-            ### Changelog
-            ${{ steps.semver.outputs.changelog }}
-            
-            ---
-            **Note**: This PR was created by the auto-version-bump workflow.
-          branch: release/${{ steps.semver.outputs.next }}
-          delete-branch: true
-          labels: |
-            release
-            automated
-          add-paths: |
-            setup.py
+        run: |
+          git config user.name "AutoBot-Callidio[bot]"
+          git config user.email "autobot-callidio[bot]@users.noreply.github.com"
+      
+      - name: Commit and Push version bump
+        if: steps.semver.outputs.next != ''
+        run: |
+          NEXT_VERSION="${{ steps.semver.outputs.next }}"
+          
+          # Add the changed file
+          git add setup.py
+          
+          # Commit the changes
+          git commit -m "chore(release): bump version to ${NEXT_VERSION}" \
+                     -m "Automated version bump by AutoBot-Callidio" \
+                     -m "Changelog:" \
+                     -m "${{ steps.semver.outputs.changelog }}"
+          
+          # Push to main
+          git push origin main
+      
+      - name: Create and Push Git Tag
+        if: steps.semver.outputs.next != ''
+        run: |
+          NEXT_VERSION="${{ steps.semver.outputs.next }}"
+          
+          # Create an annotated tag
+          git tag -a "v${NEXT_VERSION}" -m "Release version ${NEXT_VERSION}" \
+                  -m "Changelog:" \
+                  -m "${{ steps.semver.outputs.changelog }}"
+          
+          # Push the tag
+          git push origin "v${NEXT_VERSION}"
+          
+          echo "✓ Created and pushed tag v${NEXT_VERSION}"

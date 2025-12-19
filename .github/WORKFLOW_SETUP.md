@@ -1,162 +1,147 @@
 # GitHub Actions Workflow Setup Guide
 
-This guide explains how to set up the auto-version-bump workflow to work properly with GitHub Actions.
+This guide explains the auto-version-bump workflow configuration using GitHub App authentication.
 
-## Problem
+## Current Setup
 
-The error "GitHub Actions is not permitted to create or approve pull requests" occurs because GitHub's default `GITHUB_TOKEN` has security restrictions that prevent it from creating pull requests that would trigger other workflow runs. This is a deliberate security measure to prevent recursive workflow execution.
+The workflow is configured to use the **AutoBot-Callidio** GitHub App for authentication, which provides secure, automated version bumping with direct commits to the main branch.
 
-## Solutions
+### How It Works
 
-You have two options to fix this issue:
+1. **Automatic Versioning**: The workflow runs on every push to main
+2. **Version Calculation**: Uses semantic versioning based on commit history
+3. **Direct Commit**: Updates `setup.py` and commits directly to main (no PR)
+4. **Git Tagging**: Creates and pushes annotated git tags (e.g., `v1.1.2`)
+5. **GitHub App Auth**: Uses AutoBot-Callidio app credentials for authentication
 
-### Option 1: Personal Access Token (PAT) - Recommended for Most Users
+### GitHub App Configuration
 
-This is the simpler approach and works well for most repositories.
+The workflow uses these repository secrets:
+- `AUTOBOT_CALLIDIO_APP_ID`: The GitHub App ID
+- `AUTOBOT_CALLIDIO_PRIVATE_KEY`: The GitHub App private key
 
-#### Steps:
+The AutoBot-Callidio app has been added to branch protection rule exceptions, allowing it to push directly to the protected main branch.
 
-1. **Create a Personal Access Token (PAT)**:
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Or use this direct link: https://github.com/settings/tokens
-   - Click "Generate new token" → "Generate new token (classic)"
-   - Give it a descriptive name like "Auto Version Bump Workflow"
-   - Set an appropriate expiration date
-   - Select the following scopes:
-     - ✅ `repo` (Full control of private repositories)
-       - This includes `repo:status`, `repo_deployment`, `public_repo`, `repo:invite`, and `security_events`
-     - ✅ `workflow` (Update GitHub Action workflows)
-   - Click "Generate token" and **copy the token immediately** (you won't be able to see it again)
+## Workflow Features
 
-2. **Add the PAT as a Repository Secret**:
-   - Go to your repository → Settings → Secrets and variables → Actions
-   - Click "New repository secret"
-   - Name: `PAT_TOKEN`
-   - Value: Paste the token you just created
-   - Click "Add secret"
+### Version Bumping
+- Automatically calculates next semantic version
+- Updates version in `setup.py`
+- Commits changes with detailed changelog
 
-3. **Done!** The workflow is already configured to use `PAT_TOKEN` if available.
+### Git Tagging
+- Creates annotated tags with version number (e.g., `v1.2.3`)
+- Includes changelog in tag message
+- Pushes tags to remote repository
 
-#### Token Expiration
+### Authentication
+- Uses GitHub App token generation via `actions/create-github-app-token@v1`
+- More secure than Personal Access Tokens
+- Provides fine-grained permissions
+- Works with branch protection rules
 
-PATs expire, so you'll need to:
-- Set a reminder to renew the token before expiration
-- Generate a new token and update the secret when needed
-- Consider using fine-grained tokens (see below) for better security and control
+## Benefits of GitHub App Authentication
 
-### Option 2: Fine-Grained Personal Access Token - More Secure
+✅ **Enhanced Security**: App tokens are short-lived and scoped  
+✅ **Branch Protection**: Can bypass protection rules when configured  
+✅ **Audit Trail**: Actions attributed to the bot account  
+✅ **No Token Expiration**: Unlike PATs, app credentials don't expire  
+✅ **Fine-Grained Access**: Specific repository permissions  
 
-Fine-grained tokens are newer and provide better security with repository-specific access.
+## Workflow Behavior
 
-#### Steps:
+### Triggered On
+- Push to `main` branch
+- Manual workflow dispatch
 
-1. **Create a Fine-Grained PAT**:
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
-   - Or use this direct link: https://github.com/settings/tokens?type=beta
-   - Click "Generate new token"
-   - Fill in the details:
-     - **Token name**: "Auto Version Bump Workflow"
-     - **Expiration**: Set your preferred expiration
-     - **Repository access**: Select "Only select repositories" and choose this repository
-     - **Permissions** → Repository permissions:
-       - ✅ Contents: Read and write
-       - ✅ Pull requests: Read and write
-       - ✅ Metadata: Read (automatically selected)
-       - ✅ Workflows: Read and write
-   - Click "Generate token" and copy it
+### Actions Performed
+1. Generate temporary token from GitHub App credentials
+2. Checkout repository with full history
+3. Calculate next version using semver-action
+4. Update version in `setup.py`
+5. Commit changes to main branch
+6. Create and push git tag with version
 
-2. **Add as Repository Secret** (same as Option 1, step 2)
-
-3. **Done!**
-
-### Option 3: GitHub App - Most Secure for Organizations
-
-This is the most secure option and recommended for organizations, but requires more setup.
-
-#### Steps:
-
-1. **Create a GitHub App**:
-   - Go to Organization Settings → Developer settings → GitHub Apps
-   - Or go to: https://github.com/organizations/YOUR_ORG/settings/apps/new
-   - Fill in the basic information:
-     - **GitHub App name**: "Auto Version Bump Bot"
-     - **Homepage URL**: Your repository URL
-     - **Webhook**: Uncheck "Active" (not needed)
-   - Set **Repository permissions**:
-     - Contents: Read & write
-     - Pull requests: Read & write
-     - Workflows: Read & write
-   - Click "Create GitHub App"
-
-2. **Install the GitHub App**:
-   - After creation, click "Install App"
-   - Select the repository to install it on
-   - Click "Install"
-
-3. **Generate a Private Key**:
-   - In your GitHub App settings, scroll to "Private keys"
-   - Click "Generate a private key"
-   - Save the downloaded `.pem` file securely
-
-4. **Add Secrets to Repository**:
-   - `APP_ID`: Your GitHub App ID (found in the About section)
-   - `APP_PRIVATE_KEY`: Content of the `.pem` file
-
-5. **Update the Workflow**:
-   - You'll need to use a GitHub Action that generates a token from the App credentials
-   - See: https://github.com/marketplace/actions/create-github-app-token
-
-## Testing the Workflow
-
-After setting up the PAT:
-
-1. Make a commit to the `main` branch (or trigger the workflow manually via workflow_dispatch)
-2. The workflow should run and successfully create a PR
-3. Check the Actions tab to see if the workflow completed without errors
+### Skip Conditions
+- No version bump needed (determined by semver-action)
+- No commits since last version
 
 ## Troubleshooting
 
-### Error: "Resource not accessible by integration"
+### Workflow fails with "Permission denied"
 
-This means the token doesn't have the required permissions. Double-check:
-- The `repo` scope is enabled for classic PATs
-- For fine-grained PATs, check that Contents, Pull Requests, and Workflows permissions are set to "Read and write"
+Check that:
+- `AUTOBOT_CALLIDIO_APP_ID` secret is set correctly
+- `AUTOBOT_CALLIDIO_PRIVATE_KEY` secret contains the full private key
+- The GitHub App is installed on the repository
+- The app has `contents: write` permission
 
-### Error: "Bad credentials"
+### Workflow fails with "Branch protection"
 
-- The token might have expired
-- The token might not be properly saved in the repository secrets
-- Make sure you named the secret `PAT_TOKEN` (case-sensitive)
+Ensure:
+- AutoBot-Callidio app is added to branch protection rule exceptions
+- The app has permission to push to protected branches
 
-### Workflow still fails after adding PAT_TOKEN
+### Version not incrementing
 
-1. Verify the secret exists: Repository Settings → Secrets and variables → Actions
-2. Check that you copied the entire token without any extra spaces
-3. Try regenerating the token and updating the secret
-4. Make sure the workflow file is using `${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}`
+This is normal if:
+- No new commits since last version bump
+- Commits don't trigger version changes per semver rules
+- Tags already exist for the calculated version
 
-## Why This Is Necessary
+### Tag already exists
 
-GitHub's default `GITHUB_TOKEN` is scoped to prevent workflows from creating PRs that trigger other workflows. This security measure prevents:
-- Infinite workflow loops
-- Unauthorized workflow modifications
-- Excessive Actions minutes usage
+The workflow will fail if:
+- A tag with the calculated version already exists
+- Solution: Delete the tag or make additional commits to bump version
 
-By using a PAT or GitHub App token, you explicitly grant permission for the workflow to create PRs that can trigger other workflows, while maintaining security through token management and expiration.
+## Modifying the Workflow
+
+### Change Version Calculation
+Edit the `semver-action` parameters:
+```yaml
+- name: Calculate next version
+  id: semver
+  uses: ietf-tools/semver-action@v1
+  with:
+    branch: main
+    patchAll: true          # Bump patch for all commits
+    skipInvalidTags: true   # Ignore malformed tags
+```
+
+### Change Commit Message Format
+Edit the commit step:
+```yaml
+git commit -m "chore(release): bump version to ${NEXT_VERSION}"
+```
+
+### Add Additional Files to Commit
+Modify the git add command:
+```yaml
+git add setup.py other-file.txt
+```
 
 ## Security Best Practices
 
-1. **Use Fine-Grained Tokens** when possible for better security
-2. **Set Short Expiration Times** (e.g., 90 days) and rotate tokens regularly
-3. **Use GitHub Apps** for organization repositories
-4. **Never Commit Tokens** to the repository
-5. **Limit Token Scope** to only what's needed
-6. **Use Repository Secrets** (never organization or environment secrets unless necessary)
-7. **Audit Token Usage** regularly in GitHub's token settings
+1. **Keep Private Key Secure**: Never expose `AUTOBOT_CALLIDIO_PRIVATE_KEY`
+2. **Limit App Permissions**: Only grant necessary permissions to the app
+3. **Regular Audits**: Review app activity in GitHub's audit log
+4. **Rotate Keys**: Generate new private keys if compromised
+5. **Use Environments**: Consider using GitHub Environments for additional protection
+
+## GitHub App Permissions Required
+
+The AutoBot-Callidio app needs:
+- **Contents**: Read and write (for commits and tags)
+- **Metadata**: Read (automatically granted)
+
+## Alternative: Using PAT Instead
+
+If you prefer using a Personal Access Token instead of a GitHub App, see the git history for the previous PAT-based configuration. However, GitHub Apps are recommended for better security and integration with branch protection rules.
 
 ## Additional Resources
 
-- [peter-evans/create-pull-request - Triggering Further Workflow Runs](https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs)
-- [GitHub Docs - Creating a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-- [GitHub Docs - Automatic Token Authentication](https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
 - [GitHub Apps Documentation](https://docs.github.com/en/apps)
+- [actions/create-github-app-token](https://github.com/actions/create-github-app-token)
+- [Semantic Versioning](https://semver.org/)
+- [Git Tagging](https://git-scm.com/book/en/v2/Git-Basics-Tagging)
