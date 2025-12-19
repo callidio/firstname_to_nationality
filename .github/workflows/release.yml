@@ -37,10 +37,11 @@ jobs:
           TAG_NAME="${{ steps.tag.outputs.tag_name }}"
           
           # Get the previous tag for comparison
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -A 1 "^${TAG_NAME}$" | tail -n 1 || echo "")
+          # List all tags sorted by version, find current tag, and get the one before it
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${TAG_NAME}$" | head -n 1 || echo "")
           
           # Generate release notes using GitHub CLI
-          if [ -n "$PREVIOUS_TAG" ]; then
+          if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$TAG_NAME" ]; then
             echo "Generating release notes from ${PREVIOUS_TAG} to ${TAG_NAME}"
             gh release create "${TAG_NAME}" \
               --title "Release ${TAG_NAME}" \
