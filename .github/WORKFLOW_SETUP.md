@@ -11,7 +11,7 @@ The workflow is configured to use the **AutoBot-Callidio** GitHub App for authen
 1. **Automatic Versioning**: The workflow runs on every push to main
 2. **Version Calculation**: Uses semantic versioning based on commit history
 3. **Direct Commit**: Updates `setup.py` and commits directly to main (no PR)
-4. **Git Tagging**: Creates and pushes annotated git tags (e.g., `v1.1.2`)
+4. **Git Tagging**: Creates and pushes annotated git tags (e.g., `1.1.2`)
 5. **GitHub App Auth**: Uses AutoBot-Callidio app credentials for authentication
 
 ### GitHub App Configuration
@@ -30,7 +30,7 @@ The AutoBot-Callidio app has been added to branch protection rule exceptions, al
 - Commits changes with detailed changelog
 
 ### Git Tagging
-- Creates annotated tags with version number (e.g., `v1.2.3`)
+- Creates annotated tags with version number (e.g., `1.2.3`)
 - Includes changelog in tag message
 - Pushes tags to remote repository
 

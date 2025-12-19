@@ -49,7 +49,9 @@ jobs:
       - name: Update version in setup.py
         if: steps.semver.outputs.next != ''
         run: |
+          # Strip 'v' prefix from version if present
           NEXT_VERSION="${{ steps.semver.outputs.next }}"
+          NEXT_VERSION="${NEXT_VERSION#v}"
           echo "Updating version to: $NEXT_VERSION"
           
           # Update version in setup.py
@@ -73,14 +75,16 @@ jobs:
       - name: Commit, Push, and Tag version bump
         if: steps.semver.outputs.next != ''
         run: |
+          # Strip 'v' prefix from version if present
           NEXT_VERSION="${{ steps.semver.outputs.next }}"
+          NEXT_VERSION="${NEXT_VERSION#v}"
           
           # Add the changed file
           git add setup.py
           
           # Create commit message file so expressions are safely written as data
           cat > /tmp/commit-msg.txt << EOF
-          chore(release): bump version to ${{ steps.semver.outputs.next }}
+          chore(release): bump version to ${NEXT_VERSION}
           
           Automated version bump by AutoBot-Callidio
           
@@ -93,7 +97,7 @@ jobs:
           
           # Create tag message file to handle special characters safely
           cat > /tmp/tag-msg.txt << EOF
-          Release version ${{ steps.semver.outputs.next }}
+          Release version ${NEXT_VERSION}
           
           Changelog:
           ${{ steps.semver.outputs.changelog }}
