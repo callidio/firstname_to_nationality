@@ -32,7 +32,7 @@ When a tag is pushed (automatically by the version bump workflow or manually), t
 - ✅ **Fully Automated**: No manual intervention required
 - ✅ **AI-Powered Notes**: GitHub Copilot generates meaningful release notes
 - ✅ **Changelog Generation**: Automatically includes all changes since previous tag
-- ✅ **Zero Configuration**: Uses built-in `github.token`, no secrets needed
+- ✅ **GitHub App Auth**: Uses AutoBot-Callidio app for consistent authentication
 
 ### 3. Publishing (`publish.yml`)
 
@@ -40,11 +40,11 @@ Triggered by release creation, this workflow publishes the package to PyPI.
 
 ### GitHub App Configuration
 
-The auto-version-bump workflow uses these repository secrets:
+Both the auto-version-bump and auto-release workflows use these repository secrets:
 - `AUTOBOT_CALLIDIO_APP_ID`: The GitHub App ID
 - `AUTOBOT_CALLIDIO_PRIVATE_KEY`: The GitHub App private key
 
-The AutoBot-Callidio app has been added to branch protection rule exceptions, allowing it to push directly to the protected main branch.
+The AutoBot-Callidio app has been added to branch protection rule exceptions, allowing it to push directly to the protected main branch and create releases.
 
 ## Complete Automation Flow
 

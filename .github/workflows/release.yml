@@ -16,10 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AUTOBOT_CALLIDIO_APP_ID }}
+          private-key: ${{ secrets.AUTOBOT_CALLIDIO_PRIVATE_KEY }}
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for release notes
+          token: ${{ steps.generate_token.outputs.token }}
       
       - name: Get tag name
         id: tag
@@ -32,7 +40,7 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
           TAG_NAME="${{ steps.tag.outputs.tag_name }}"
           
