@@ -13,7 +13,7 @@ pylint==4.0.4
 
 # Type checking
 mypy==1.19.1
-types-requests==2.32.4.20250913
+types-requests==2.32.4.20260107
 
 # Build and distribution
 twine==6.2.0
