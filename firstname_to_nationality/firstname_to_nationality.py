@@ -120,7 +120,7 @@ class FirstnameToNationality:
                         self.model, "predict_proba"
                     ):
                         print(
-                            f"Warning: Loaded model is invalid. Creating default model."
+                            "Warning: Loaded model is invalid. Creating default model."
                         )
                         self._create_default_model()
                 else:
@@ -132,10 +132,10 @@ class FirstnameToNationality:
                         self.label_encoder = LabelEncoder()
                     else:
                         print(
-                            f"Warning: Model file contains invalid data. Creating default model."
+                            "Warning: Model file contains invalid data. Creating default model."
                         )
                         self._create_default_model()
-            except Exception as e:
+            except (OSError, pickle.UnpicklingError, EOFError, ValueError) as e:
                 print(f"Warning: Could not load model from {self.model_file_path}: {e}")
                 self._create_default_model()
         else:
@@ -175,7 +175,7 @@ class FirstnameToNationality:
             try:
                 with open(self.dictionary_file_path, "rb") as f:
                     self.nationality_dictionary = pickle.load(f)
-            except Exception as e:
+            except (OSError, pickle.UnpicklingError, EOFError, ValueError) as e:
                 print(
                     f"Warning: Could not load dictionary from {self.dictionary_file_path}: {e}"
                 )
@@ -243,7 +243,7 @@ class FirstnameToNationality:
 
             return [(pred.nationality, pred.confidence) for pred in predictions]
 
-        except Exception as e:
+        except (ValueError, AttributeError, IndexError) as e:
             print(f"Error predicting for name '{name}': {e}")
             return [("unknown", 0.0)]
 

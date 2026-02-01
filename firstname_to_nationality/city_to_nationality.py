@@ -11,7 +11,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from geopy.exc import GeocoderServiceError, GeocoderTimedOut
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut, GeopyError
 from geopy.geocoders import Nominatim
 
 from .firstname_to_country import FirstnameToCountry
@@ -110,7 +110,7 @@ class CityToNationality:
                 # Service error - will return None and fallback to name-based prediction
                 return None
 
-            except Exception:
+            except (GeopyError, AttributeError, KeyError):
                 # Unexpected error - will return None and fallback to name-based prediction
                 return None
 
