@@ -9,7 +9,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .firstname_to_nationality import FirstnameToNationality
 
@@ -125,7 +125,7 @@ class FirstnameToCountry:
 
     def predict_single(
         self, name: str, top_n: int = 1, use_dict: bool = True
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Predict country for a single name.
 
@@ -169,7 +169,7 @@ class FirstnameToCountry:
 
     def _aggregate_predictions(
         self, all_predictions: List[Dict], total_names: int
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Aggregate predictions from multiple names.
 
@@ -233,7 +233,7 @@ class FirstnameToCountry:
         top_n: int = 1,
         use_dict: bool = True,
         aggregate: bool = True,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Predict countries for multiple names with aggregation.
 
@@ -264,7 +264,7 @@ class FirstnameToCountry:
         top_n: int = 1,
         use_dict: bool = True,
         aggregate: bool = True,
-    ) -> Dict[str, any] | List[Dict[str, any]]:
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """
         Predict countries for one or more names.
 
