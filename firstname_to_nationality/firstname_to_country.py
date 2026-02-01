@@ -9,7 +9,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .firstname_to_nationality import FirstnameToNationality
 
@@ -95,7 +95,7 @@ class FirstnameToCountry:
                 f"✅ Loaded {len(self.nationality_to_country)} nationality-to-country mappings"
             )
 
-        except Exception as e:
+        except (OSError, csv.Error, KeyError) as e:
             print(
                 f"Warning: Could not load country mapping from {self.country_csv_path}: {e}"
             )
@@ -125,7 +125,7 @@ class FirstnameToCountry:
 
     def predict_single(
         self, name: str, top_n: int = 1, use_dict: bool = True
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Predict country for a single name.
 
@@ -167,13 +167,73 @@ class FirstnameToCountry:
 
         return results
 
+    def _aggregate_predictions(
+        self, all_predictions: List[Dict], total_names: int
+    ) -> Dict[str, Any]:
+        """
+        Aggregate predictions from multiple names.
+
+        Args:
+            all_predictions: List of prediction dictionaries
+            total_names: Total number of names predicted
+
+        Returns:
+            Dictionary with aggregated nationality counts and country codes
+        """
+        nationality_counts: Dict[str, int] = {}
+        country_code_mapping: Dict[str, Dict[str, str]] = {}
+
+        for item in all_predictions:
+            for pred in item["predictions"]:
+                nationality = pred["nationality"]
+
+                # Count nationalities
+                if nationality not in nationality_counts:
+                    nationality_counts[nationality] = 0
+                nationality_counts[nationality] += 1
+
+                # Store country code mapping
+                if nationality not in country_code_mapping and pred["country_code"]:
+                    country_code_mapping[nationality] = {
+                        "country_code": pred["country_code"],
+                        "country_name": pred["country_name"],
+                        "alpha3": pred["alpha3"],
+                    }
+
+        # Build aggregated result
+        result = {"total_names": total_names, "nationalities": []}
+
+        # Sort by count (descending)
+        sorted_nationalities = sorted(
+            nationality_counts.items(), key=lambda x: x[1], reverse=True
+        )
+
+        for nationality, count in sorted_nationalities:
+            nat_result = {
+                "nationality": nationality,
+                "count": count,
+                "percentage": round(count / total_names * 100, 2),
+            }
+
+            # Add country information if available
+            if nationality in country_code_mapping:
+                nat_result.update(country_code_mapping[nationality])
+            else:
+                nat_result["country_code"] = None
+                nat_result["country_name"] = None
+                nat_result["alpha3"] = None
+
+            result["nationalities"].append(nat_result)
+
+        return result
+
     def predict_batch(
         self,
         names: List[str],
         top_n: int = 1,
         use_dict: bool = True,
         aggregate: bool = True,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Predict countries for multiple names with aggregation.
 
@@ -196,53 +256,7 @@ class FirstnameToCountry:
         if not aggregate:
             return all_predictions
 
-        # Aggregate results
-        nationality_counts: Dict[str, int] = {}
-        country_code_mapping: Dict[str, Dict[str, str]] = {}
-
-        for item in all_predictions:
-            for pred in item["predictions"]:
-                nationality = pred["nationality"]
-
-                # Count nationalities
-                if nationality not in nationality_counts:
-                    nationality_counts[nationality] = 0
-                nationality_counts[nationality] += 1
-
-                # Store country code mapping
-                if nationality not in country_code_mapping and pred["country_code"]:
-                    country_code_mapping[nationality] = {
-                        "country_code": pred["country_code"],
-                        "country_name": pred["country_name"],
-                        "alpha3": pred["alpha3"],
-                    }
-
-        # Build aggregated result
-        result = {"total_names": len(names), "nationalities": []}
-
-        # Sort by count (descending)
-        sorted_nationalities = sorted(
-            nationality_counts.items(), key=lambda x: x[1], reverse=True
-        )
-
-        for nationality, count in sorted_nationalities:
-            nat_result = {
-                "nationality": nationality,
-                "count": count,
-                "percentage": round(count / len(names) * 100, 2),
-            }
-
-            # Add country information if available
-            if nationality in country_code_mapping:
-                nat_result.update(country_code_mapping[nationality])
-            else:
-                nat_result["country_code"] = None
-                nat_result["country_name"] = None
-                nat_result["alpha3"] = None
-
-            result["nationalities"].append(nat_result)
-
-        return result
+        return self._aggregate_predictions(all_predictions, len(names))
 
     def __call__(
         self,
@@ -250,7 +264,7 @@ class FirstnameToCountry:
         top_n: int = 1,
         use_dict: bool = True,
         aggregate: bool = True,
-    ) -> Dict[str, any] | List[Dict[str, any]]:
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """
         Predict countries for one or more names.
 
@@ -265,8 +279,7 @@ class FirstnameToCountry:
         """
         if isinstance(names, str):
             return self.predict_single(names, top_n, use_dict)
-        else:
-            return self.predict_batch(names, top_n, use_dict, aggregate)
+        return self.predict_batch(names, top_n, use_dict, aggregate)
 
 
 # Alias for convenience
