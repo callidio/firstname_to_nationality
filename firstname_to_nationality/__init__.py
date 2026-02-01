@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 r"""firstname_to_nationality"""
+
 from __future__ import absolute_import
 
 from .city_to_nationality import CityPrediction, CityToNationality

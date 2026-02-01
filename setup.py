@@ -6,8 +6,11 @@ Implementation using ML libraries for nationality prediction.
 
 import setuptools
 from pathlib import Path
-from setup_utils import read_requirements, filter_packages_by_name, exclude_packages_by_name
-
+from setup_utils import (
+    read_requirements,
+    filter_packages_by_name,
+    exclude_packages_by_name,
+)
 
 # Read README file
 readme_path = Path(__file__).parent / "README.md"
