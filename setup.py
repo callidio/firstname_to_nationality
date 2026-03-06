@@ -40,7 +40,7 @@ CORE_PACKAGES = exclude_packages_by_name(REQUIRED_PACKAGES, VISUALIZATION_PACKAG
 
 setuptools.setup(
     name="firstname-to-nationality",
-    version="1.1.17",
+    version="1.1.18",
     author="Firstname to Nationality Team",
     author_email="",
     description="Nationality Prediction from Firstname using Python 3.13 and scikit-learn",
