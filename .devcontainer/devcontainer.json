@@ -38,7 +38,7 @@
     },
     "forwardPorts": [8000, 8080],
     "postCreateCommand": "pip install -e .",
-    "remoteUser": "bfrusteri",
-    "containerUser": "bfrusteri",
+    "remoteUser": "user",
+    "containerUser": "user",
     "updateRemoteUserUID": false
 }
