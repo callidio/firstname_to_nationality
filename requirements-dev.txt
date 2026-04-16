@@ -12,7 +12,7 @@ isort==8.0.1
 pylint==4.0.5
 
 # Type checking
-mypy==1.19.1
+mypy==1.20.1
 types-requests==2.32.4.20260107
 
 # Build and distribution
