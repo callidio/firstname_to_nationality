@@ -3,7 +3,7 @@
 
 # Core ML dependencies
 numpy==2.4.3
-scikit-learn==1.8.0
+scikit-learn==1.9.0
 joblib==1.5.3
 pandas==3.0.1
 
