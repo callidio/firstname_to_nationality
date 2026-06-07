@@ -2,7 +2,7 @@
 # Managed by Dependabot for automated updates
 
 # Core ML dependencies
-numpy==2.4.3
+numpy==2.4.6
 scikit-learn==1.9.0
 joblib==1.5.3
 pandas==3.0.1
