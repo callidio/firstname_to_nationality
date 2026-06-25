@@ -24,7 +24,7 @@ jobs:
           private-key: ${{ secrets.AUTOBOT_CALLIDIO_PRIVATE_KEY }}
       
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0  # Full history needed for release notes
           token: ${{ steps.generate_token.outputs.token }}
