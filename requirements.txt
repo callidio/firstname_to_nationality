@@ -11,5 +11,5 @@ pandas==3.0.1
 geopy==2.4.1
 
 # Optional visualization dependencies
-matplotlib==3.10.9
+matplotlib==3.11.1
 seaborn==0.13.2
