@@ -8,7 +8,7 @@ joblib==1.5.3
 pandas==3.0.1
 
 # Geocoding
-geopy==2.4.1
+geopy==2.5.0
 
 # Optional visualization dependencies
 matplotlib==3.10.9
